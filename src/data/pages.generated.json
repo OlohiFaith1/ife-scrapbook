@@ -1,0 +1,137 @@
+{
+  "widths": [
+    480,
+    800,
+    1200,
+    1800,
+    3000
+  ],
+  "pages": [
+    {
+      "slug": "cover",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(40 72 216)"
+    },
+    {
+      "slug": "01",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(248 232 232)"
+    },
+    {
+      "slug": "02",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(248 232 232)"
+    },
+    {
+      "slug": "03",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(24 72 216)"
+    },
+    {
+      "slug": "04",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(232 232 232)"
+    },
+    {
+      "slug": "05",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(248 232 232)"
+    },
+    {
+      "slug": "06",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(248 232 232)"
+    },
+    {
+      "slug": "07",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(248 232 232)"
+    },
+    {
+      "slug": "08",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(248 232 232)"
+    },
+    {
+      "slug": "09",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(8 8 136)"
+    },
+    {
+      "slug": "10",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(248 232 232)"
+    },
+    {
+      "slug": "11",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(24 72 216)"
+    },
+    {
+      "slug": "12",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(8 8 40)"
+    },
+    {
+      "slug": "13",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(8 8 136)"
+    },
+    {
+      "slug": "14",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(248 232 232)"
+    },
+    {
+      "slug": "15",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(248 248 248)"
+    },
+    {
+      "slug": "16",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(248 232 232)"
+    },
+    {
+      "slug": "17",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(24 72 216)"
+    },
+    {
+      "slug": "18",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(248 232 232)"
+    },
+    {
+      "slug": "19",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(248 232 232)"
+    },
+    {
+      "slug": "20",
+      "width": 7684,
+      "height": 10874,
+      "color": "rgb(8 8 136)"
+    }
+  ]
+}
