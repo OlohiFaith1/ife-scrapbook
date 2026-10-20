@@ -16,7 +16,7 @@ export default tseslint.config(
   },
   {
     // page.evaluate() callbacks run in the browser.
-    files: ['scripts/smoke-test.mjs'],
+    files: ['scripts/compare-figma.mjs'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
 );

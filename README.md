@@ -1,43 +1,43 @@
-# The Lapo Files — scrapbook site
+# The Lapo Files — website
 
-The 21 scrapbook slides (cover + pages 01–20) laid out as paper on a cream table.
-Click or tap any page to pick it up; turn pages with the arrows, ← →, or a swipe;
-click/tap the page (or press Z) to zoom in and read the small type.
+Built from the Figma file `playground`:
+
+- **Screen 1** — `Desktop - 1` (58:93): the question on cobalt blue.
+- **Screen 2** — `Desktop - 2` (58:98): the scrapbook on the cream surface.
+
+Status: **Milestone 1** (branch `milestone-1`). Screen 1 → 3 s → crossfade to Screen 2 →
+closed cover → click / Enter / Space / → opens the cover onto the static 01 | 02 spread.
+Page turning (M2), zoom and small-screen layouts are not built yet.
 
 ## Run it
 
 ```sh
 npm install
-npm run dev        # http://localhost:5173
+npm run texture   # once: builds public/texture from assets-src (see below)
+npm run dev
 ```
 
 ## Scripts
 
-| Command              | What it does                                                         |
-| -------------------- | -------------------------------------------------------------------- |
-| `npm run dev`        | Local dev server                                                     |
-| `npm run build`      | Type-check and build the static site into `dist/`                    |
-| `npm run preview`    | Serve the built site (http://localhost:4173)                         |
-| `npm run lint`       | ESLint                                                               |
-| `npm run typecheck`  | TypeScript                                                           |
-| `npm run images`     | Regenerate the WebP copies from the original exports                 |
-| `npm run test:smoke` | Headless-Chrome checks against `npm run preview` (layout, viewer, a11y, reduced motion) |
+| Command            | What it does                                                        |
+| ------------------ | ------------------------------------------------------------------- |
+| `npm run dev`      | Local dev server                                                    |
+| `npm run build`    | Type-check and build into `dist/`                                   |
+| `npm run preview`  | Serve the build (http://localhost:4173)                             |
+| `npm run compare`  | Diff the running preview against the Figma renders + flow checks   |
+| `npm run images`   | Regenerate page WebPs from `~/Desktop/ife's scrapbook` (read-only)  |
+| `npm run texture`  | Regenerate the background texture from `assets-src/`               |
+| `npm run lint` / `npm run typecheck` | ESLint / TypeScript                               |
 
-## Images
+## ⚠️ Texture — local use only
 
-The originals in `~/Desktop/ife's scrapbook/` are only ever **read**. `npm run images`
-writes resized WebP copies to `public/pages/` (480, 800, 1200, 1800 and 3000px wide)
-plus `src/data/pages.generated.json` (dimensions and a placeholder colour per page).
-Existing outputs are skipped; add `-- --force` to redo them, or set `SCRAPBOOK_SRC`
-to read from a different folder.
+The background texture is the image fill of Figma layer `425379127320117182 1`
+(a photo of a blue spray-painted canvas). Its rights are **unverified**, so
+`assets-src/`, `public/texture/` and the Figma reference renders in `tests/reference/`
+are gitignored. Because `vite build` copies `public/` into `dist/`, **do not deploy
+`dist/`** until the texture's source and licence are confirmed.
 
-The table loads 480–1200px previews lazily; the viewer loads 1800px copies, and 3000px
-only when zoomed.
+## Measurements
 
-## Where things live
-
-- `src/layout.ts`: where each page sits on the table (desktop and phone compositions)
-- `src/pages.ts`: page titles and alt text
-- `src/table.ts`: renders the table and the settle-in entrance
-- `src/viewer.ts`: the full-screen page viewer (open/close lift, swipe, zoom, keyboard)
-- `src/styles.css`: paper surface, shadows, motion and reduced-motion rules
+All sizes in `src/styles.css` are Figma px × `--u`, where the 1440×1024 frame is scaled
+to fit the viewport — at 1440×1024 the site renders 1:1 with the Figma frames.

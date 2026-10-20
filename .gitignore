@@ -1,3 +1,10 @@
 node_modules
 dist
 .DS_Store
+
+# Texture: rights unverified — local only, never commit or deploy
+assets-src/
+public/texture/
+# Figma reference renders contain the texture
+tests/reference/
+tests/output/

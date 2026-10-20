@@ -3,119 +3,64 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>The Lapo Files — Issue 001</title>
-    <meta
-      name="description"
-      content="The Lapo Files, Issue 001: a scrapbook investigation into the pens we borrow, lose and forget, in 21 pages."
-    />
-    <meta name="theme-color" content="#f3ece0" />
+    <title>why don’t we return the pens we borrow?</title>
+    <meta name="theme-color" content="#1749d1" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" as="image" href="/texture/wall-texture.webp" type="image/webp" />
     <link
       rel="preload"
       as="image"
       type="image/webp"
-      imagesrcset="/pages/cover-480.webp 480w, /pages/cover-800.webp 800w, /pages/cover-1200.webp 1200w"
-      imagesizes="(max-width: 680px) 76vw, min(36vw, 470px)"
-      fetchpriority="high"
+      imagesrcset="/pages/cover-800.webp 800w, /pages/cover-1200.webp 1200w"
+      imagesizes="min(33vw, 46.4vh)"
     />
   </head>
   <body>
-    <a class="skip" href="#pages">Skip to the pages</a>
-
-    <header class="masthead" id="top">
-      <span class="masthead__mark">the lapo files</span>
-      <span class="masthead__meta">Issue 001 <span aria-hidden="true">·</span> 21 pages</span>
-    </header>
-
-    <main>
-      <section class="hero" aria-labelledby="title">
-        <div class="hero__cover">
-          <button class="sheet sheet--cover" type="button" data-index="0" aria-haspopup="dialog" style="--c: rgb(40 72 216)">
-            <img
-              src="/pages/cover-800.webp"
-              srcset="/pages/cover-480.webp 480w, /pages/cover-800.webp 800w, /pages/cover-1200.webp 1200w"
-              sizes="(max-width: 680px) 76vw, min(36vw, 470px)"
-              width="7684"
-              height="10874"
-              alt="Cover of The Lapo Files, Issue 001: the title in large white letters on royal blue, with a sticky note reading “he insisted on a cover design. i have no hand in this. — lapo”."
-              fetchpriority="high"
-              decoding="async"
-            />
-          </button>
-        </div>
-
-        <div class="hero__note">
-          <p class="hero__kicker">Issue 001 <span aria-hidden="true">·</span> a scrapbook in 21 pages</p>
-          <h1 id="title" class="hero__title">the lapo files</h1>
-          <p class="hero__lede">an investigation into the pens we borrow, lose &amp; forget.</p>
-          <p class="hero__hint">
-            <svg class="hero__arrow" viewBox="0 0 120 60" aria-hidden="true">
-              <path d="M116 14c-22 -9 -55 -8 -78 6c-11 7 -20 17 -26 29" />
-              <path d="M5 36l7 14l13 -9" />
-            </svg>
-            pick up any page to read it
+    <main class="experience" data-state="loading">
+      <!-- Screen 1 — Figma: Desktop - 1 (58:93) -->
+      <section class="screen screen--question" aria-labelledby="question">
+        <div class="texture" aria-hidden="true"></div>
+        <div class="stage">
+          <h1 id="question" class="question">why don’t we<br />return the pens<br />we borrow?</h1>
+          <p class="credit">
+            <span class="credit__muted">created by</span> Snow, <span class="credit__muted">for</span> Ife
           </p>
-          <div class="hero__actions">
-            <button class="button button--primary" type="button" data-open="0">Open the file</button>
-            <a class="button button--quiet" href="#pages">Spread out the pages <span aria-hidden="true">↓</span></a>
+        </div>
+      </section>
+
+      <!-- Screen 2 — Figma: Desktop - 2 (58:98) -->
+      <section class="screen screen--book" aria-label="The scrapbook">
+        <div class="texture" aria-hidden="true"></div>
+        <div class="stage">
+          <div class="book" data-book tabindex="-1">
+            <!-- Left board + page 01: shown flat once the cover has opened. -->
+            <div class="board board--left" data-left>
+              <img class="page" data-page="01" alt="" width="7684" height="10874" />
+            </div>
+
+            <!-- Right board + page 02: underneath the cover. -->
+            <div class="board board--right">
+              <img class="page" data-page="02" alt="" width="7684" height="10874" />
+            </div>
+
+            <!-- The cover leaf hinges on the spine. Front = cover, back = page 01. -->
+            <button class="leaf" type="button" data-cover>
+              <span class="leaf__face leaf__face--front board board--right">
+                <img class="page" data-page="cover" alt="" width="7684" height="10874" />
+              </span>
+              <span class="leaf__face leaf__face--back board board--left" aria-hidden="true">
+                <img class="page" data-page="01" data-decorative alt="" width="7684" height="10874" />
+              </span>
+            </button>
           </div>
+          <p class="credit">
+            <span class="credit__muted">created by</span> Snow, <span class="credit__muted">for</span> Ife
+          </p>
         </div>
       </section>
 
-      <section class="table" id="pages" aria-labelledby="pages-title" tabindex="-1">
-        <h2 id="pages-title" class="visually-hidden">The pages</h2>
-        <ol class="board" role="list"></ol>
-        <noscript>
-          <p class="noscript">Turn on JavaScript to spread out the pages. The cover above shows the first page.</p>
-        </noscript>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <p class="footer__scrawl">end of file.</p>
-      <p class="footer__meta">The Lapo Files <span aria-hidden="true">·</span> Issue 001</p>
-      <a class="button button--quiet" href="#top" data-top>Back to the cover <span aria-hidden="true">↑</span></a>
-    </footer>
-
-    <dialog class="viewer" aria-labelledby="viewer-title">
-      <div class="viewer__shade" aria-hidden="true"></div>
-      <div class="viewer__bar">
-        <p class="viewer__count" aria-hidden="true"><span data-count>00</span><span class="viewer__of"> / 20</span></p>
-        <h2 id="viewer-title" class="viewer__title" data-title></h2>
-        <div class="viewer__tools">
-          <button class="icon-button" type="button" data-zoom aria-pressed="false" aria-label="Zoom in to read" title="Zoom (Z)">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="10.5" cy="10.5" r="6.5" />
-              <path d="M15.5 15.5L21 21" />
-              <path d="M7.5 10.5h6" />
-              <path class="zoom-plus" d="M10.5 7.5v6" />
-            </svg>
-          </button>
-          <button class="icon-button" type="button" data-close aria-label="Close" title="Close (Esc)">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="viewer__stage" data-stage>
-        <div class="viewer__scroller" data-scroller>
-          <img class="viewer__img" data-image alt="" width="7684" height="10874" draggable="false" />
-        </div>
-      </div>
-
-      <button class="viewer__nav viewer__nav--prev icon-button" type="button" data-prev aria-label="Previous page">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
-      </button>
-      <button class="viewer__nav viewer__nav--next icon-button" type="button" data-next aria-label="Next page">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
-      </button>
-
-      <p class="viewer__help" aria-hidden="true">
-        <span class="only-fine">← → to turn · click to zoom · esc to close</span>
-        <span class="only-coarse">swipe to turn · tap to zoom</span>
-      </p>
       <p class="visually-hidden" aria-live="polite" data-live></p>
-    </dialog>
+    </main>
 
     <script type="module" src="/src/main.ts"></script>
   </body>
