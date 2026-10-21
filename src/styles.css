@@ -116,19 +116,14 @@ button {
 }
 
 /*
- * Texture — layer "425379127320117182 1" (58:94 / 58:99): the 3418×4096 image
- * fills a 3609×4325 layer centred on the frame at 20% opacity. We serve the
- * central 2600×1800 crop at the same scale (×1.0559 → 2745.3×1900.6 px).
+ * Texture — procedural paper from scripts/build-texture.mjs: a seamless
+ * 1024×1024 tile shown at 512px (2× for retina). Its mean colour is --cream,
+ * which stays underneath as the fallback while it loads.
  */
 .texture {
   position: absolute;
-  left: calc(50% + 0.5px);
-  top: calc(50% - 0.5px);
-  width: 2745.3px;
-  height: 1900.6px;
-  translate: -50% -50%;
-  opacity: 0.2;
-  background: url('/texture/wall-texture.webp') center / 100% 100% no-repeat;
+  inset: 0;
+  background: url('/texture/wall-texture.webp') center / 512px 512px repeat;
   pointer-events: none;
 }
 

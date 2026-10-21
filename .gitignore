@@ -2,9 +2,12 @@ node_modules
 dist
 .DS_Store
 
-# Texture: rights unverified — local only, never commit or deploy
+# Unverified Figma texture photo — rights unknown, local only, never commit or deploy
 assets-src/
-public/texture/
+# public/texture/ stays ignored except the procedural paper from
+# scripts/build-texture.mjs, which is original and safe to publish
+public/texture/*
+!public/texture/wall-texture.webp
 # Figma reference renders contain the texture
 tests/reference/
 tests/output/

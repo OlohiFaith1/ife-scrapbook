@@ -13,7 +13,7 @@ Page turning (M2), zoom and small-screen layouts are not built yet.
 
 ```sh
 npm install
-npm run texture   # once: builds public/texture from assets-src (see below)
+npm run texture   # optional: regenerates the procedural paper texture
 npm run dev
 ```
 
@@ -26,16 +26,19 @@ npm run dev
 | `npm run preview`  | Serve the build (http://localhost:4173)                             |
 | `npm run compare`  | Diff the running preview against the Figma renders + flow checks   |
 | `npm run images`   | Regenerate page WebPs from `~/Desktop/ife's scrapbook` (read-only)  |
-| `npm run texture`  | Regenerate the background texture from `assets-src/`               |
+| `npm run texture`  | Regenerate the procedural paper texture (deterministic)            |
 | `npm run lint` / `npm run typecheck` | ESLint / TypeScript                               |
 
-## ⚠️ Texture — local use only
+## Texture
 
-The background texture is the image fill of Figma layer `425379127320117182 1`
-(a photo of a blue spray-painted canvas). Its rights are **unverified**, so
-`assets-src/`, `public/texture/` and the Figma reference renders in `tests/reference/`
-are gitignored. Because `vite build` copies `public/` into `dist/`, **do not deploy
-`dist/`** until the texture's source and licence are confirmed.
+`public/texture/wall-texture.webp` is a seamless paper tile generated entirely in code
+by `scripts/build-texture.mjs` (seeded, so it is reproducible). It is original work and
+is the only file in `public/texture/` that git tracks.
+
+The Figma layer's own texture (`425379127320117182 1`, a photo of a blue spray-painted
+canvas) has **unverified rights**. It lives only in `assets-src/` and in the Figma
+reference renders in `tests/reference/`. Both are gitignored, nothing in the build uses
+them, and they must not be committed or deployed.
 
 ## Measurements
 
