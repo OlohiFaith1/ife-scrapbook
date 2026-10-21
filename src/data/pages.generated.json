@@ -9,126 +9,147 @@
   "pages": [
     {
       "slug": "cover",
+      "source": "ife's scrapbook/COVER.png",
       "width": 7684,
       "height": 10874,
       "color": "rgb(40 72 216)"
     },
     {
       "slug": "01",
+      "source": "ife-scrapbook-site/public/Page 1.png",
       "width": 7684,
-      "height": 10874,
+      "height": 10872,
       "color": "rgb(248 232 232)"
     },
     {
       "slug": "02",
+      "source": "ife-scrapbook-site/public/Page 2.png",
       "width": 7684,
       "height": 10874,
       "color": "rgb(248 232 232)"
     },
     {
       "slug": "03",
+      "source": "ife-scrapbook-site/public/Page 3.png",
       "width": 7684,
       "height": 10874,
       "color": "rgb(24 72 216)"
     },
     {
       "slug": "04",
+      "source": "ife-scrapbook-site/public/Page 4.png",
       "width": 7684,
       "height": 10874,
       "color": "rgb(232 232 232)"
     },
     {
       "slug": "05",
+      "source": "ife-scrapbook-site/public/Page 5.png",
       "width": 7684,
       "height": 10874,
       "color": "rgb(248 232 232)"
     },
     {
       "slug": "06",
+      "source": "ife-scrapbook-site/public/Page 6.png",
       "width": 7684,
-      "height": 10874,
+      "height": 10872,
       "color": "rgb(248 232 232)"
     },
     {
       "slug": "07",
+      "source": "ife-scrapbook-site/public/Page 7.png",
       "width": 7684,
-      "height": 10874,
+      "height": 10872,
       "color": "rgb(248 232 232)"
     },
     {
       "slug": "08",
+      "source": "ife-scrapbook-site/public/Page 8.png",
       "width": 7684,
-      "height": 10874,
+      "height": 10872,
       "color": "rgb(248 232 232)"
     },
     {
       "slug": "09",
+      "source": "ife-scrapbook-site/public/Page 9.png",
       "width": 7684,
       "height": 10874,
       "color": "rgb(8 8 136)"
     },
     {
       "slug": "10",
+      "source": "ife-scrapbook-site/public/Page 10.png",
       "width": 7684,
-      "height": 10874,
+      "height": 10872,
       "color": "rgb(248 232 232)"
     },
     {
       "slug": "11",
+      "source": "ife-scrapbook-site/public/Page 11.png",
       "width": 7684,
-      "height": 10874,
+      "height": 10872,
       "color": "rgb(24 72 216)"
     },
     {
       "slug": "12",
+      "source": "ife-scrapbook-site/public/Page 12.png",
       "width": 7684,
       "height": 10874,
       "color": "rgb(8 8 40)"
     },
     {
       "slug": "13",
+      "source": "ife-scrapbook-site/public/Page 13.png",
       "width": 7684,
       "height": 10874,
       "color": "rgb(8 8 136)"
     },
     {
       "slug": "14",
+      "source": "ife-scrapbook-site/public/Page 14.png",
       "width": 7684,
       "height": 10874,
       "color": "rgb(248 232 232)"
     },
     {
       "slug": "15",
+      "source": "ife-scrapbook-site/public/Page 15.png",
       "width": 7684,
       "height": 10874,
       "color": "rgb(248 248 248)"
     },
     {
       "slug": "16",
+      "source": "ife-scrapbook-site/public/Page 16.png",
       "width": 7684,
       "height": 10874,
       "color": "rgb(248 232 232)"
     },
     {
       "slug": "17",
+      "source": "ife-scrapbook-site/public/Page 17.png",
       "width": 7684,
       "height": 10874,
       "color": "rgb(24 72 216)"
     },
     {
       "slug": "18",
+      "source": "ife-scrapbook-site/public/Page 18.png",
       "width": 7684,
-      "height": 10874,
+      "height": 10872,
       "color": "rgb(248 232 232)"
     },
     {
       "slug": "19",
+      "source": "ife-scrapbook-site/public/Page 19.png",
       "width": 7684,
       "height": 10874,
       "color": "rgb(248 232 232)"
     },
     {
       "slug": "20",
+      "source": "ife-scrapbook-site/public/Page 20/End.png",
       "width": 7684,
       "height": 10874,
       "color": "rgb(8 8 136)"

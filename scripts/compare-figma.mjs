@@ -98,6 +98,12 @@ const check = (ok, message) => {
   if (!ok) failures.push(message);
 };
 const stateOf = (page) => page.$eval('.experience', (el) => el.dataset.state);
+/** The cover leaf's artwork: loaded, opaque, and the cover export on the front. */
+const coverShown = (page) =>
+  page.$$eval('.leaf img', (els) =>
+    els.every((e) => e.complete && e.naturalWidth > 0 && getComputedStyle(e).opacity === '1') &&
+    els.map((e) => e.dataset.page).join() === 'cover,01',
+  );
 
 // ── Reference size, full motion ────────────────────────────────
 {
@@ -142,6 +148,7 @@ const stateOf = (page) => page.$eval('.experience', (el) => el.dataset.state);
   const coverBox = await page.$eval('.leaf', (el) => el.getBoundingClientRect().toJSON());
   const coverCentre = coverBox.x + coverBox.width / 2;
   check(Math.abs(coverCentre - W / 2) < 1.5, `closed cover is centred (centre at ${coverCentre.toFixed(1)}px)`);
+  check(await coverShown(page), `closed book shows the cover artwork (and page 01 on its back)`);
 
   // Open by clicking the cover; record frames of the swing for review.
   await page.click('.leaf');
@@ -170,7 +177,7 @@ const stateOf = (page) => page.$eval('.experience', (el) => el.dataset.state);
     near(geometry.left.width, 474.99) && near(geometry.left.height, 672.17) && near(geometry.right.x - (geometry.left.x + geometry.left.width), 19.53),
     `pages 475×672 with a 19.5px spine (${geometry.left.width.toFixed(2)}×${geometry.left.height.toFixed(2)}, spine ${(geometry.right.x - geometry.left.x - geometry.left.width).toFixed(2)})`,
   );
-  const order = await page.$$eval('.book > .board .page', (els) => els.map((e) => e.dataset.page));
+  const order = await page.$$eval('.book > .board .page.is-current', (els) => els.map((e) => e.dataset.page));
   check(order.join() === '01,02', `open spread is 01 | 02 (${order.join(' | ')})`);
 
   await report('desktop-1', screen1);
@@ -203,6 +210,199 @@ const stateOf = (page) => page.$eval('.experience', (el) => el.dataset.state);
   await page.keyboard.press('Enter');
   await page.waitForFunction(() => document.querySelector('.experience').dataset.state === 'open');
   check(true, `extra input during the swing is ignored and the book still settles open`);
+  await context.close();
+}
+
+// ── Page navigation and both ways back to the cover ───────────
+const waitState = (page, s, timeout = 5000) =>
+  page.waitForFunction((s) => document.querySelector('.experience').dataset.state === s, s, { timeout });
+const spreadOf = (page) =>
+  page.$$eval('.book > .board .page.is-current', (els) => els.map((e) => e.dataset.page).join('|'));
+const EXPECTED = Array.from({ length: 10 }, (_, i) => `${String(2 * i + 1).padStart(2, '0')}|${String(2 * i + 2).padStart(2, '0')}`);
+
+async function toOpenBook(page) {
+  await page.goto(url, { waitUntil: 'networkidle' });
+  await waitState(page, 'question');
+  await page.keyboard.press('Space');
+  await waitState(page, 'closed');
+  await page.click('.leaf');
+  await waitState(page, 'open');
+}
+
+for (const reducedMotion of ['no-preference', 'reduce']) {
+  const tag = reducedMotion === 'reduce' ? 'reduced motion: ' : '';
+  const context = await browser.newContext({ viewport: { width: W, height: H }, reducedMotion });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await toOpenBook(page);
+
+  const spiral = () => page.$eval('.spiral', (el) => el.getBoundingClientRect().toJSON());
+  const spiralBefore = await spiral();
+  check(
+    (await page.$eval('.spiral-slot', (el) => getComputedStyle(el).pointerEvents)) === 'none',
+    `${tag}spiral is drawn and never takes clicks`,
+  );
+
+  // Right page forwards through every spread.
+  const seen = [await spreadOf(page)];
+  for (let i = 1; i < EXPECTED.length; i++) {
+    await page.click('.book > .board--right');
+    await waitState(page, 'open');
+    seen.push(await spreadOf(page));
+  }
+  check(seen.join() === EXPECTED.join(), `${tag}right page steps through ${seen.join(', ')}`);
+  const s = await spiral();
+  check(Math.abs(s.x - spiralBefore.x) < 0.5 && Math.abs(s.y - spiralBefore.y) < 0.5, `${tag}spiral stays fixed while pages turn`);
+
+  const a11y = await page.evaluate(() => ({
+    live: document.querySelector('[data-live]').textContent,
+    right: document.querySelector('[data-side="right"]').getAttribute('aria-label'),
+    left: document.querySelector('[data-side="left"]').getAttribute('aria-label'),
+    alts: [...document.querySelectorAll('.book > .board .page.is-current')].map((e) => e.alt.split(':')[0]).join('|'),
+    hidden: [...document.querySelectorAll('.book > .board .page:not(.is-current)')].every((e) => e.getAttribute('aria-hidden') === 'true' && e.alt === ''),
+  }));
+  check(
+    a11y.live === 'Pages 19 and 20.' && a11y.alts === 'Page 19|Page 20' && a11y.hidden && a11y.right === 'Close the scrapbook' && a11y.left === 'Previous: pages 17 and 18',
+    `${tag}labels, alt text, aria-hidden and live region follow the spread (${JSON.stringify(a11y)})`,
+  );
+
+  // Left page / ArrowLeft goes back one spread.
+  await page.click('.book > .board--left');
+  await waitState(page, 'open');
+  check((await spreadOf(page)) === '17|18', `${tag}left page goes back to 17|18`);
+  await page.keyboard.press('ArrowRight');
+  await waitState(page, 'open');
+  check((await spreadOf(page)) === '19|20', `${tag}ArrowRight goes forward to 19|20`);
+
+  // 19|20 → right page → cover, with 01|02 restored underneath.
+  await page.click('.book > .board--right');
+  await waitState(page, 'closed');
+  check(
+    (await spreadOf(page)) === '01|02' && (await page.$eval('[data-live]', (e) => e.textContent)) === 'The scrapbook cover.',
+    `${tag}19|20 right page returns to the cover`,
+  );
+  await page.waitForTimeout(400);
+  check(await coverShown(page), `${tag}cover artwork is shown after returning from 19|20`);
+  await page.click('.leaf');
+  await waitState(page, 'open');
+  check((await spreadOf(page)) === '01|02', `${tag}reopening after 19|20 shows 01|02`);
+
+  // Rapid repeated clicks advance exactly one spread.
+  await page.click('.book > .board--right');
+  await page.click('.book > .board--right', { force: true }).catch(() => {});
+  await page.keyboard.press('ArrowRight');
+  await waitState(page, 'open');
+  await page.waitForTimeout(400);
+  check((await spreadOf(page)) === '03|04', `${tag}repeated input during a turn doesn't skip spreads (${await spreadOf(page)})`);
+
+  // 01|02 → left page → the cover swings shut.
+  await page.keyboard.press('ArrowLeft');
+  await waitState(page, 'open');
+  const states = [];
+  await page.exposeFunction('__recordState', (st) => states.push(st));
+  await page.evaluate(() => {
+    // Records are batched, so log each change's previous value.
+    new MutationObserver((records) => records.forEach((r) => window.__recordState(r.oldValue))).observe(
+      document.querySelector('.experience'),
+      { attributes: true, attributeOldValue: true, attributeFilter: ['data-state'] },
+    );
+  });
+  await page.click('.book > .board--left');
+  await page.waitForTimeout(500);
+  const midSwing = await page.$eval('.leaf', (el) => getComputedStyle(el).rotate);
+  await waitState(page, 'closed');
+  check(
+    (await page.$eval('.leaf', (el) => getComputedStyle(el).display)) !== 'none' && !(await page.$eval('.leaf', (el) => el.inert)),
+    `${tag}01|02 left page returns to the cover (${[...states, 'closed'].join(' → ')})`,
+  );
+  if (!tag) {
+    check(
+      states.join() === 'open,closing-start,closing' && midSwing !== 'none' && !midSwing.includes('-180'),
+      `the cover swings shut (rotate mid-swing: ${midSwing})`,
+    );
+  }
+  check(await coverShown(page), `${tag}cover artwork is shown after returning from 01|02`);
+  await page.click('.leaf');
+  await waitState(page, 'open');
+  check((await spreadOf(page)) === '01|02', `${tag}the cover opens again onto 01|02`);
+
+  check(errors.length === 0, `${tag}no page errors ${errors.join(' | ')}`);
+  await context.close();
+}
+
+// ── Click sounds ───────────────────────────────────────────────
+{
+  const context = await browser.newContext({ viewport: { width: W, height: H } });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  // Count audio contexts and every sound actually started, named by its length.
+  await page.addInitScript(() => {
+    window.__contexts = 0;
+    window.__sounds = [];
+    const Base = window.AudioContext;
+    window.AudioContext = class extends Base {
+      constructor(...args) {
+        super(...args);
+        window.__contexts++;
+      }
+    };
+    const start = AudioBufferSourceNode.prototype.start;
+    AudioBufferSourceNode.prototype.start = function (...args) {
+      const d = this.buffer?.duration ?? 0;
+      window.__sounds.push(d > 0.45 ? 'cover' : d > 0.2 ? 'page' : 'tap');
+      return start.apply(this, args);
+    };
+  });
+  const sounds = () => page.evaluate(() => window.__sounds.join());
+  const soundsBecome = (list) =>
+    page.waitForFunction((list) => window.__sounds.join() === list, list, { timeout: 2000 }).then(() => true, () => false);
+
+  await page.goto(url, { waitUntil: 'networkidle' });
+  const served = await page.evaluate(() =>
+    Promise.all(['tap', 'page', 'cover'].map((n) => fetch(`/sounds/${n}.wav`).then((r) => `${r.status} ${r.headers.get('content-type')}`))),
+  );
+  check(served.every((s) => s.startsWith('200 audio/')), `sound files are served locally (${served.join(', ')})`);
+
+  // Let Screen 1 auto-advance with no input at all: no audio may start.
+  await waitState(page, 'closed', 8000);
+  check(
+    (await page.evaluate(() => window.__contexts)) === 0 && (await sounds()) === '',
+    `no audio before the visitor interacts`,
+  );
+
+  await page.click('.leaf');
+  check(await soundsBecome('cover'), `opening the cover plays the cover sound once (${await sounds()})`);
+  await waitState(page, 'open');
+
+  // One page sound per accepted turn; extra input mid-turn stays silent.
+  await page.click('.book > .board--right');
+  await page.click('.book > .board--right', { force: true }).catch(() => {});
+  await page.keyboard.press('ArrowRight');
+  await waitState(page, 'open');
+  await page.waitForTimeout(300);
+  check((await sounds()) === 'cover,page', `a turn plays one page sound, repeated input adds none (${await sounds()})`);
+
+  await page.keyboard.press('ArrowLeft');
+  check(await soundsBecome('cover,page,page'), `keyboard turns play the page sound`);
+  await waitState(page, 'open');
+  await page.click('.book > .board--left');
+  check(await soundsBecome('cover,page,page,cover'), `returning to the cover plays the cover sound`);
+  await waitState(page, 'closed');
+
+  // Footer links: one soft tap each (navigation blocked for the test).
+  await page.evaluate(() => document.addEventListener('click', (e) => e.target.closest('a') && e.preventDefault(), true));
+  await page.click('.screen--book .credit__link >> nth=0');
+  check(await soundsBecome('cover,page,page,cover,tap'), `clicking “Snow” plays one tap`);
+  await page.waitForTimeout(150);
+  await page.click('.screen--book .credit__link >> nth=1');
+  check(await soundsBecome('cover,page,page,cover,tap,tap'), `clicking “Ife” plays one tap`);
+  await page.hover('.screen--book .credit__link >> nth=0');
+  await page.waitForTimeout(200);
+  check((await sounds()).split(',').length === 6 && (await stateOf(page)) === 'closed', `hover is silent and the book is undisturbed`);
+
+  check(errors.length === 0, `sounds: no page errors ${errors.join(' | ')}`);
   await context.close();
 }
 

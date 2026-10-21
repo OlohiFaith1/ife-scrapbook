@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "texture": "node scripts/build-texture.mjs",
+    "sounds": "node scripts/build-sounds.mjs",
     "compare": "node scripts/compare-figma.mjs"
   },
   "devDependencies": {

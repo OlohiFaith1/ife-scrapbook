@@ -28,6 +28,7 @@
 
   --fade: 900ms;
   --swing: 1300ms;
+  --turn: 200ms;
 }
 
 *,
@@ -95,10 +96,7 @@ button {
   visibility: hidden;
 }
 
-.experience[data-state='crossfade'] .screen--question,
-.experience[data-state='closed'] .screen--question,
-.experience[data-state='opening'] .screen--question,
-.experience[data-state='open'] .screen--question {
+.experience:not([data-state='loading'], [data-state='question']) .screen--question {
   opacity: 0;
 }
 
@@ -107,9 +105,7 @@ button {
   visibility: visible;
 }
 
-.experience[data-state='closed'] .screen--question,
-.experience[data-state='opening'] .screen--question,
-.experience[data-state='open'] .screen--question {
+.experience:not([data-state='loading'], [data-state='question'], [data-state='crossfade']) .screen--question {
   visibility: hidden;
 }
 
@@ -192,6 +188,26 @@ button {
   color: rgb(23 23 23 / 0.6);
 }
 
+/* Snow and Ife: plain text until hovered. The underline is always laid out
+   (transparent), so showing it never shifts the text. */
+.credit__link {
+  color: inherit;
+  text-decoration: underline transparent;
+  text-decoration-thickness: max(1px, calc(1 * var(--u)));
+  text-underline-offset: calc(3 * var(--u));
+  transition: text-decoration-color 160ms ease-out;
+}
+
+.credit__link:hover {
+  text-decoration-color: currentColor;
+}
+
+.credit__link:focus-visible {
+  outline: max(1.5px, calc(1.5 * var(--u))) solid currentColor;
+  outline-offset: calc(3 * var(--u));
+  border-radius: calc(2 * var(--u));
+}
+
 /* ─── Screen 2 — the book, 58:102 ─────────────────────────── */
 
 .book {
@@ -202,11 +218,13 @@ button {
   height: calc(var(--book-h) * var(--u));
   perspective: calc(4400 * var(--u));
   outline: none;
-  transition: translate var(--swing) cubic-bezier(0.45, 0.05, 0.2, 1);
+  transition:
+    translate var(--swing) cubic-bezier(0.45, 0.05, 0.2, 1),
+    opacity var(--turn) ease-in-out;
 }
 
 /* Closed: shift left by half a board so the cover sits centred. */
-.experience:not([data-state='open'], [data-state='opening']) .book {
+.experience:not([data-state='open'], [data-state='opening'], [data-state='turning'], [data-state='closing-start']) .book {
   translate: calc(var(--half-w) * -0.5 * var(--u)) 0;
 }
 
@@ -217,6 +235,8 @@ button {
   top: 0;
   display: grid;
   place-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   width: calc(var(--half-w) * var(--u));
   height: calc(var(--book-h) * var(--u));
   background: var(--blue);
@@ -236,8 +256,32 @@ button {
   width: calc(var(--page-w) * var(--u));
   height: calc(var(--page-h) * var(--u));
   background: var(--cream);
+  /* The 01–20 exports are 7684×10872, a hair shorter than the slot's ratio;
+     cover keeps the aspect ratio (≈0.06px trimmed top and bottom). */
+  object-fit: cover;
   user-select: none;
   -webkit-user-drag: none;
+}
+
+/* Two stacked images per flat board: the current page, and the next one fading
+   in. Scoped to .book > .board so the cover leaf's faces (also .board) are
+   unaffected and always show their single image. */
+.book > .board > .page {
+  grid-area: 1 / 1;
+  opacity: 0;
+}
+
+.book > .board > .page.is-current {
+  opacity: 1;
+}
+
+.book > .board.is-crossfading > .page {
+  transition: opacity var(--turn) ease-in-out;
+}
+
+.board:focus-visible {
+  outline: calc(2 * var(--u)) solid var(--blue);
+  outline-offset: calc(6 * var(--u));
 }
 
 /* The flat left board only appears once the cover has landed on it. */
@@ -245,8 +289,19 @@ button {
   visibility: hidden;
 }
 
-.experience[data-state='open'] .book > .board--left {
+.experience[data-state='open'] .book > .board--left,
+.experience[data-state='turning'] .book > .board--left {
   visibility: visible;
+}
+
+/* Last spread → cover: the whole book fades out and back in, closed. */
+.book.is-hidden {
+  opacity: 0;
+}
+
+.book.no-motion,
+.book.no-motion * {
+  transition: none !important;
 }
 
 /* ─── The cover leaf ──────────────────────────────────────── */
@@ -279,12 +334,96 @@ button {
   rotate: y 180deg;
 }
 
-.experience[data-state='opening'] .leaf {
+.experience[data-state='opening'] .leaf,
+.experience[data-state='closing-start'] .leaf {
   rotate: y -180deg;
 }
 
-.experience[data-state='open'] .leaf {
+/* Closing from 01|02: the cover is placed open, then swings shut. */
+.experience[data-state='closing-start'] .leaf,
+.experience[data-state='closing-start'] .book {
+  transition: none;
+}
+
+.experience[data-state='open'] .leaf,
+.experience[data-state='turning'] .leaf {
   display: none;
+}
+
+/* ─── Spiral binding (src/spiral.ts) ──────────────────────── */
+
+/* Spans the spine plus 8px into each page; 35.53 × 700 Figma px. */
+.spiral-slot {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  left: calc((var(--half-w) - 17.767) * var(--u));
+  width: calc(35.534 * var(--u));
+  height: calc(var(--book-h) * var(--u));
+  pointer-events: none;
+}
+
+.spiral {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.spiral__closed,
+.spiral__open {
+  transition: opacity 360ms ease-in-out var(--spiral-delay, 0ms);
+}
+
+.experience[data-state='opening'],
+.experience[data-state='closing'] {
+  --spiral-delay: calc(var(--swing) * 0.4);
+}
+
+/* Loops cross the spine when open, wrap the cover's left edge when closed. */
+.spiral__open,
+.experience:is([data-state='open'], [data-state='turning'], [data-state='opening'], [data-state='closing-start']) .spiral__closed {
+  opacity: 0;
+}
+
+.experience:is([data-state='open'], [data-state='turning'], [data-state='opening'], [data-state='closing-start']) .spiral__open {
+  opacity: 1;
+}
+
+.spiral__holes {
+  fill: rgb(14 18 44 / 0.55);
+}
+
+.spiral path {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.spiral__shadow {
+  stroke: rgb(15 22 60 / 0.3);
+  stroke-width: 3.4;
+  translate: 0.6px 1.6px;
+}
+
+.spiral__back {
+  stroke: #0a2370;
+  stroke-width: 2.3;
+}
+
+.spiral__wire {
+  stroke: #0b2a8c;
+  stroke-width: 2.8;
+}
+
+.spiral__enamel {
+  stroke: #2152dc;
+  stroke-width: 1.9;
+}
+
+.spiral__shine {
+  stroke: rgb(255 255 255 / 0.55);
+  stroke-width: 0.6;
+  translate: 0 -0.55px;
 }
 
 /* ─── Reduced motion: no swing, just a short crossfade ────── */

@@ -23,7 +23,7 @@
         <div class="stage">
           <h1 id="question" class="question">why don’t we<br />return the pens<br />we borrow?</h1>
           <p class="credit">
-            <span class="credit__muted">created by</span> Snow, <span class="credit__muted">for</span> Ife
+            <span class="credit__muted">created by</span> <a class="credit__link" href="https://snowolohijere.com/">Snow</a>, <span class="credit__muted">for</span> <a class="credit__link" href="https://x.com/theifeolakunle">Ife</a>
           </p>
         </div>
       </section>
@@ -33,15 +33,18 @@
         <div class="texture" aria-hidden="true"></div>
         <div class="stage">
           <div class="book" data-book tabindex="-1">
-            <!-- Left board + page 01: shown flat once the cover has opened. -->
-            <div class="board board--left" data-left>
-              <img class="page" data-page="01" alt="" width="7684" height="10874" />
-            </div>
+            <!-- Left board: shown flat once the cover has opened. Click = previous spread.
+                 Each board holds two stacked images so spreads can crossfade. -->
+            <button class="board board--left" type="button" data-side="left">
+              <img class="page is-current" data-page="01" alt="" width="7684" height="10872" />
+              <img class="page" alt="" width="7684" height="10872" aria-hidden="true" />
+            </button>
 
-            <!-- Right board + page 02: underneath the cover. -->
-            <div class="board board--right">
-              <img class="page" data-page="02" alt="" width="7684" height="10874" />
-            </div>
+            <!-- Right board: underneath the cover. Click = next spread. -->
+            <button class="board board--right" type="button" data-side="right">
+              <img class="page is-current" data-page="02" alt="" width="7684" height="10872" />
+              <img class="page" alt="" width="7684" height="10872" aria-hidden="true" />
+            </button>
 
             <!-- The cover leaf hinges on the spine. Front = cover, back = page 01. -->
             <button class="leaf" type="button" data-cover>
@@ -49,12 +52,15 @@
                 <img class="page" data-page="cover" alt="" width="7684" height="10874" />
               </span>
               <span class="leaf__face leaf__face--back board board--left" aria-hidden="true">
-                <img class="page" data-page="01" data-decorative alt="" width="7684" height="10874" />
+                <img class="page" data-page="01" data-decorative alt="" width="7684" height="10872" />
               </span>
             </button>
+
+            <!-- Spiral binding: fixed over the spine, never takes clicks (src/spiral.ts). -->
+            <div class="spiral-slot" data-spiral></div>
           </div>
           <p class="credit">
-            <span class="credit__muted">created by</span> Snow, <span class="credit__muted">for</span> Ife
+            <span class="credit__muted">created by</span> <a class="credit__link" href="https://snowolohijere.com/">Snow</a>, <span class="credit__muted">for</span> <a class="credit__link" href="https://x.com/theifeolakunle">Ife</a>
           </p>
         </div>
       </section>

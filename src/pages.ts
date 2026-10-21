@@ -34,19 +34,19 @@ const ALT: Record<string, { alt: string }> = {
     alt: 'Interview page titled “Meet Lapo Pen”: questions in bold sans-serif answered in blue handwriting.',
   },
   '06': {
-    alt: 'Interview continued beneath splashes of blue ink: “After everything, what would you like people to know about you?”, followed by “One last thing.”',
+    alt: 'Interview continued beneath splashes of blue ink: “After everything, what would you like people to know about you?”, followed by “One last thing.” Handwritten blue notes add “P.S.! P.S.! P.S.!” and “Let it be known that I didn’t get paid for this!”',
   },
   '07': {
-    alt: 'Short memories titled The Examination Hall and The Borrower, set in small blue type with ink spots in the corner.',
+    alt: 'Short memories titled The Examination Hall, The Pen Game and The Borrower, set in small blue type with ink spots in the corner. Handwritten margin notes include “I bet Nepo had a hand in this!”',
   },
   '08': {
-    alt: 'Short memories titled The Pen Game, The Letter and The Return, with the large script heading “Things Pens Remember”.',
+    alt: 'Short memories titled The Letter and The Return, with the large script heading “Things Pens Remember”. Handwritten notes add “I remember that love letter.” and “Someone?”',
   },
   '09': {
     alt: 'Royal blue page with a giant white letter T opening the complaint: “The plaintiff, Lapo Pen, brings a complaint against the owner for repeated mishandling…”',
   },
   '10': {
-    alt: 'Two columns of case notes on cream detailing drops, defences and claims, ending “47 drops. Zero apologies.”',
+    alt: 'Two columns of case notes on cream detailing drops, defences and claims, ending “47 drops. Zero apologies.” Handwritten notes below read “News reaching me now that the judge of this case is also a pen abuser!”, “Where are the good judges?!” and “I won’t be proceeding with him. Thank you!”',
   },
   '11': {
     alt: 'Blue page of chat bubbles: black interview questions such as “Do you remember the first time you were dropped?” answered in white handwritten notes.',
@@ -70,7 +70,7 @@ const ALT: Record<string, { alt: string }> = {
     alt: 'Blue page headlined “Every pen has a story” in white, above a long block of text.',
   },
   '18': {
-    alt: 'Cream page with the slogan “Justice for pens!” in bold blue letters.',
+    alt: 'The slogan “Justice for pens!” in bold blue letters, drawn over as a hand-held protest placard, with an arrow and the handwritten note “especially ME!”',
   },
   '19': {
     alt: 'A sweeping navy brushstroke beside the closing text, titled “The Final Statement” in blue script.',
