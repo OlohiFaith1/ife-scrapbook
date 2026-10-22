@@ -26,6 +26,18 @@ const files = new Map(
   ]),
 );
 
+// Safari before 14.5 only has the prefixed constructor.
+const AudioContextClass: typeof AudioContext | undefined =
+  window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+/** decodeAudioData through its callbacks, which every browser supports (older
+    Safari has no promise form, so calling it promise-style fails there). */
+const decodeSound = (audio: AudioContext, data: ArrayBuffer) =>
+  new Promise<AudioBuffer>((resolve, reject) => {
+    const pending = audio.decodeAudioData(data, resolve, reject) as Promise<AudioBuffer> | undefined;
+    pending?.catch(() => undefined); // the callbacks already report the outcome
+  });
+
 let ctx: AudioContext | undefined;
 const buffers = new Map<Sound, Promise<AudioBuffer | undefined>>();
 /** Buffers that have finished decoding, for sounds that must play on time. */
@@ -33,14 +45,19 @@ const decoded = new Map<Sound, AudioBuffer>();
 const voices = new Map<Sound, { gain: GainNode; source: AudioBufferSourceNode; at: number }>();
 
 function context() {
-  if (!ctx && typeof AudioContext === 'function') {
-    ctx = new AudioContext();
+  if (!ctx && AudioContextClass) {
+    const audio = new AudioContextClass();
+    ctx = audio;
+    // iOS suspends or "interrupts" audio when the screen locks, the app goes to
+    // the background or a call comes in. Listen for gestures again whenever it
+    // stops, so the next tap, click or key starts it back up.
+    audio.addEventListener?.('statechange', () => audio.state !== 'running' && listen());
     for (const name of names) {
       buffers.set(
         name,
         files
           .get(name)!
-          .then((data) => (data ? ctx!.decodeAudioData(data) : undefined))
+          .then((data) => (data ? decodeSound(audio, data) : undefined))
           .then((buffer) => {
             if (buffer) decoded.set(name, buffer);
             return buffer;
@@ -77,11 +94,15 @@ function unlock() {
   });
 }
 
+function listen() {
+  for (const type of GESTURES) window.addEventListener(type, unlock, { capture: true });
+}
+
 function stopListening() {
   for (const type of GESTURES) window.removeEventListener(type, unlock, { capture: true });
 }
 
-for (const type of GESTURES) window.addEventListener(type, unlock, { capture: true });
+listen();
 
 /**
  * Tries to start audio without a gesture, for sounds that run before the
@@ -119,7 +140,8 @@ export function play(name: Sound) {
 
     const audio = context();
     if (!audio) return;
-    if (audio.state === 'suspended') audio.resume().catch(() => undefined);
+    // Resume from 'suspended' and from iOS's 'interrupted' alike, within the gesture.
+    if (audio.state !== 'running') audio.resume?.().catch(() => undefined);
 
     // Hold the slot now, so rapid clicks during decoding don't queue up.
     const voice = { at: now } as { gain: GainNode; source: AudioBufferSourceNode; at: number };

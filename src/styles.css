@@ -774,6 +774,49 @@ button {
   translate: 0 -0.55px;
 }
 
+/* ─── Phones and tablets ──────────────────────────────────── */
+
+/*
+ * The 1440×1024 frame shrunk to a phone leaves the pages a few centimetres
+ * wide. Here the book gets its own scale instead: as large as the screen allows
+ * (keeping room for the 09|10 push-in), centred in the space above the footer,
+ * inside the safe area. Every book measurement is in --u, so redefining --u on
+ * .book scales the boards, pages, cover, spiral and turning sheet together, in
+ * proportion. The footer moves to the bottom of the screen at a readable size.
+ * Desktop (wider than 1024px, with a mouse) is untouched.
+ */
+@media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+  :root {
+    --edge-x: max(12px, env(safe-area-inset-left), env(safe-area-inset-right));
+    --edge-top: max(12px, env(safe-area-inset-top));
+    --credit-size: max(11px, calc(16.739 * var(--u)));
+    --credit-line: max(17px, calc(28 * var(--u)));
+    --credit-bottom: max(12px, env(safe-area-inset-bottom));
+    /* Room kept below the book: the footer's two lines, its margin, and a gap. */
+    --foot: calc(2 * var(--credit-line) + var(--credit-bottom) + 12px);
+  }
+
+  .book {
+    --u: min(
+      calc((100vw - 2 * var(--edge-x)) / (2 * var(--half-w) * 1.06)),
+      calc((100dvh - var(--edge-top) - var(--foot)) / (var(--book-h) * 1.06))
+    );
+    /* The stage is centred in the viewport, so 50% is the screen's centre. */
+    left: calc(50% - var(--half-w) * var(--u));
+    top: calc(50% + (var(--edge-top) - var(--foot)) / 2 - var(--book-h) * var(--u) / 2);
+    /* Quick taps turn pages instead of zooming the screen; pinch-zoom still works. */
+    touch-action: manipulation;
+  }
+
+  .credit {
+    top: auto;
+    bottom: calc(50% - 50dvh + var(--credit-bottom));
+    font-size: var(--credit-size);
+    line-height: var(--credit-line);
+    letter-spacing: -0.02em;
+  }
+}
+
 /* ─── Reduced motion: no swing, just a short crossfade ────── */
 
 @media (prefers-reduced-motion: reduce) {

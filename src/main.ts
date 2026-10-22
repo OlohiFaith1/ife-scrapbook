@@ -25,8 +25,14 @@ const TYPE = { start: 600, key: 70, word: 60, line: 240, linger: 1600, pause: 60
 const KEYS = ['key1', 'key2', 'key3'] as const;
 const KEY_RING = 90;
 const BOOK_WIDTHS = [800, 1200];
-// The page slot is 475×672 Figma px; the stage scales by min(vw/1440, vh/1024).
-const BOOK_SIZES = 'min(33vw, 46.4vh)';
+// The page slot is 475×672 Figma px. On desktop the stage scales by
+// min(vw/1440, vh/1024); on phones and tablets the book has its own, larger
+// scale (styles.css, "Phones and tablets"), so pages there are up to ~46vw/64vh.
+const BOOK_SIZES = [
+  '(max-width: 1024px) min(46vw, 64vh)',
+  '(hover: none) and (pointer: coarse) min(46vw, 64vh)',
+  'min(33vw, 46.4vh)',
+].join(', ');
 
 const root = document.querySelector<HTMLElement>('.experience')!;
 const book = document.querySelector<HTMLElement>('[data-book]')!;
