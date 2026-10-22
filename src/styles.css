@@ -13,6 +13,8 @@
 :root {
   --blue: #1749d1;
   --cream: #f4f0e8;
+  /* The front cover artwork's blue (its most common colour): the blank back cover. */
+  --cover-blue: #234ad1;
   --ink: #171717;
 
   --u: min(calc(100vw / 1440), calc(100dvh / 1024));
@@ -29,6 +31,8 @@
   --fade: 900ms;
   --swing: 1300ms;
   --turn: 200ms;
+  --push: 700ms;
+  --flip: 820ms;
 }
 
 *,
@@ -155,6 +159,37 @@ button {
   text-align: center;
 }
 
+/* Opening: the question is typed one character at a time behind a blinking
+   cursor (src/main.ts). Untyped characters keep their place in the layout. */
+.question.is-typing .question__key:not(.is-typed) {
+  visibility: hidden;
+}
+
+/* A thin bar in the text colour, spanning Caveat's letters (from the ascenders
+   to just below the baseline) and clear of their overhanging strokes. */
+.question__cursor {
+  position: absolute;
+  width: max(2px, calc(3.5 * var(--u)));
+  height: 0.7em;
+  margin-top: 0.34em;
+  margin-left: 0.08em;
+  background: currentColor;
+  border-radius: calc(1 * var(--u));
+  pointer-events: none;
+  animation: caret 1.06s ease-in-out infinite;
+}
+
+@keyframes caret {
+  0%,
+  42% {
+    opacity: 1;
+  }
+  50%,
+  92% {
+    opacity: 0;
+  }
+}
+
 .credit {
   position: absolute;
   left: 0;
@@ -215,12 +250,25 @@ button {
   outline: none;
   transition:
     translate var(--swing) cubic-bezier(0.45, 0.05, 0.2, 1),
-    opacity var(--turn) ease-in-out;
+    opacity var(--turn) ease-in-out,
+    scale var(--push) cubic-bezier(0.33, 0, 0.2, 1);
+}
+
+/* Pages 09|10, the middle of the journal: a gentle camera push-in. `scale`
+   composes with the closed-state `translate`, and the book is centred on the
+   stage while open, so it grows in place with room to spare on every side. */
+.book.is-middle {
+  scale: 1.05;
 }
 
 /* Closed: shift left by half a board so the cover sits centred. */
-.experience:not([data-state='open'], [data-state='opening'], [data-state='turning'], [data-state='closing-start']) .book {
+.experience:not([data-state='open'], [data-state='opening'], [data-state='turning'], [data-state='closing-start'], [data-state='back']) .book {
   translate: calc(var(--half-w) * -0.5 * var(--u)) 0;
+}
+
+/* Closed on the back cover: shift right by half a board so it sits centred. */
+.experience[data-state='back'] .book {
+  translate: calc(var(--half-w) * 0.5 * var(--u)) 0;
 }
 
 /* Each half: a blue board, rounded on its outer corners only, with the page
@@ -285,7 +333,30 @@ button {
 }
 
 .experience[data-state='open'] .book > .board--left,
-.experience[data-state='turning'] .book > .board--left {
+.experience[data-state='turning'] .book > .board--left,
+.experience[data-state='back'] .book > .board--left {
+  visibility: visible;
+}
+
+/*
+ * The back cover. Turning 19|20 over, the right board (page 20 on the back
+ * board) is the sheet in flight; once it lands, the left board is the closed
+ * journal's back: the same blue board, its face a blank field of cover blue.
+ */
+.book.is-turning-over > .board--right {
+  visibility: hidden;
+}
+
+.book > .board--left::after {
+  content: '';
+  grid-area: 1 / 1;
+  width: calc(var(--page-w) * var(--u));
+  height: calc(var(--page-h) * var(--u));
+  background: var(--cover-blue);
+  visibility: hidden;
+}
+
+.book.is-back > .board--left::after {
   visibility: visible;
 }
 
@@ -341,8 +412,282 @@ button {
 }
 
 .experience[data-state='open'] .leaf,
-.experience[data-state='turning'] .leaf {
+.experience[data-state='turning'] .leaf,
+.experience[data-state='back'] .leaf {
   display: none;
+}
+
+/* ─── Page turn (src/sheet.ts) ────────────────────────────── */
+
+/*
+ * One sheet of paper turns over the spine. --lift turns it (0 → 180deg) and
+ * --curl bends it: the free edge leads as it lifts, trails as it falls, and
+ * flattens as it lands. Both are registered so they animate, and inherit, so
+ * every strip, face and shadow reads them.
+ */
+@property --lift {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: 0deg;
+}
+
+@property --curl {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: 0deg;
+}
+
+/* Covers the book, above the boards and below the spiral. Its own perspective
+   is the book's, centred on the spine. The sheet is a page by default: page
+   sized, its gap from the spine and the top the page's margin in the board
+   (--gx, --gy), the artwork filling it (--ix, --iy), fully flexible (--bend)
+   and paper coloured (--face). */
+.turn {
+  --mx: calc((var(--half-w) - var(--page-w)) / 2);
+  --my: calc((var(--book-h) - var(--page-h)) / 2);
+  --sw: var(--page-w);
+  --sh: var(--page-h);
+  --gx: var(--mx);
+  --gy: var(--my);
+  --ix: 0;
+  --iy: 0;
+  --bend: 1;
+  --face: var(--cream);
+  --pw: calc(var(--page-w) * var(--u));
+  --swp: calc(var(--sw) * var(--u));
+  --bent: calc(var(--curl) * var(--bend));
+  --edge: calc(var(--lift) + var(--bent));
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  perspective: calc(4400 * var(--u));
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Turning the last sheet over with the back board: a whole board, page 20
+   inset in its blue rim, and far stiffer than paper. */
+.turn[data-kind='board'] {
+  --sw: var(--half-w);
+  --sh: var(--book-h);
+  --gx: 0;
+  --gy: 0;
+  --ix: var(--mx);
+  --iy: var(--my);
+  --bend: 0.2;
+  --face: var(--blue);
+}
+
+.turn.is-turning {
+  visibility: visible;
+  animation:
+    turn-lift var(--flip) cubic-bezier(0.45, 0.05, 0.4, 1) both,
+    turn-curl var(--flip) linear both;
+}
+
+@keyframes turn-lift {
+  to {
+    --lift: 180deg;
+  }
+}
+
+@keyframes turn-curl {
+  0% {
+    --curl: 0deg;
+    animation-timing-function: cubic-bezier(0.3, 0, 0.5, 1);
+  }
+  30% {
+    --curl: 48deg;
+    animation-timing-function: ease-in-out;
+  }
+  64% {
+    --curl: 0deg;
+    animation-timing-function: ease-in-out;
+  }
+  84% {
+    --curl: -16deg;
+    animation-timing-function: ease-in-out;
+  }
+  100% {
+    --curl: 0deg;
+  }
+}
+
+/* The sheet sits exactly on what it lifts, hinged on the spine. */
+.sheet {
+  --sign: -1;
+  --s: calc(var(--swp) / var(--strips));
+  position: absolute;
+  top: calc(var(--gy) * var(--u));
+  left: calc((var(--half-w) + var(--gx)) * var(--u));
+  width: var(--swp);
+  height: calc(var(--sh) * var(--u));
+  transform-origin: calc(var(--gx) * -1 * var(--u)) 50%;
+  transform-style: preserve-3d;
+  rotate: y calc(var(--lift) * var(--sign));
+}
+
+.sheet__strip {
+  /* Angles to the page at this strip's near and far edges, for its shading:
+     the lifted face darkens as it turns away from the light, the underside
+     brightens as it comes down to rest. */
+  --a: calc(var(--lift) + var(--bent) * var(--c));
+  --an: calc(var(--lift) + var(--bent) * var(--cn));
+  --front-near: clamp(0, calc(0.42 * (1 - cos(var(--a)))), 0.55);
+  --front-far: clamp(0, calc(0.42 * (1 - cos(var(--an)))), 0.55);
+  --back-near: clamp(0, calc(0.3 * (1 + cos(var(--a)))), 0.4);
+  --back-far: clamp(0, calc(0.3 * (1 + cos(var(--an)))), 0.4);
+  /* Where the artwork sits in this strip's slice, on the face that stays put
+     (near) and on the face that lands mirrored on the other side (far). */
+  --x-near: calc(var(--ix) * var(--u) - var(--k) * var(--s));
+  --x-far: calc((var(--k) + 1) * var(--s) - var(--ix) * var(--u) - var(--pw));
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--s);
+  height: 100%;
+  transform-origin: 0 50%;
+  transform-style: preserve-3d;
+  rotate: y calc(var(--bent) * var(--w) * var(--sign));
+}
+
+.sheet__strip > .sheet__strip {
+  left: 100%;
+}
+
+/* Each face shows its slice of a page; the 1px overlap hides hairline seams. */
+.sheet__face {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1px;
+  right: -1px;
+  background-color: var(--face);
+  background-repeat: no-repeat;
+  background-size: var(--pw) calc(var(--page-h) * var(--u));
+  background-position-y: calc(var(--iy) * var(--u));
+  backface-visibility: hidden;
+}
+
+/* A board's outer corners are rounded, like the boards it lands beside. */
+.turn[data-kind='board'] .sheet__strip--edge > .sheet__face--front {
+  border-radius: 0 calc(var(--radius) * var(--u)) calc(var(--radius) * var(--u)) 0;
+}
+
+.turn[data-kind='board'] .sheet__strip--edge > .sheet__face--back {
+  border-radius: calc(var(--radius) * var(--u)) 0 0 calc(var(--radius) * var(--u));
+}
+
+.sheet__face--front {
+  background-image: var(--front);
+  background-position-x: calc(var(--x-near) + 1px);
+}
+
+.sheet__face--back {
+  rotate: y 180deg;
+  background-image: var(--back);
+  background-position-x: calc(var(--x-far) + 1px);
+}
+
+/* Shading runs from the near edge's angle to the far edge's (the back face is
+   mirrored, so its gradient runs the other way). */
+.sheet__face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.sheet__face--front::after {
+  background: linear-gradient(to right, rgb(12 16 40 / var(--front-near)), rgb(12 16 40 / var(--front-far)));
+}
+
+.sheet__face--back::after {
+  background: linear-gradient(to right, rgb(12 16 40 / var(--back-far)), rgb(12 16 40 / var(--back-near)));
+}
+
+/* Turning back: the same sheet, mirrored onto the left page. */
+.turn[data-dir='back'] .sheet {
+  --sign: 1;
+  left: calc((var(--half-w) - var(--gx) - var(--sw)) * var(--u));
+  transform-origin: calc(var(--swp) + var(--gx) * var(--u)) 50%;
+}
+
+.turn[data-dir='back'] .sheet__strip {
+  left: auto;
+  right: 0;
+  transform-origin: 100% 50%;
+}
+
+.turn[data-dir='back'] .sheet__strip > .sheet__strip {
+  right: 100%;
+}
+
+.turn[data-dir='back'] .sheet__face--front {
+  background-position-x: calc(var(--x-far) + 1px);
+}
+
+.turn[data-dir='back'] .sheet__face--back {
+  background-position-x: calc(var(--x-near) + 1px);
+}
+
+.turn[data-dir='back'] .sheet__face--front::after {
+  background: linear-gradient(to right, rgb(12 16 40 / var(--front-far)), rgb(12 16 40 / var(--front-near)));
+}
+
+.turn[data-dir='back'] .sheet__face--back::after {
+  background: linear-gradient(to right, rgb(12 16 40 / var(--back-near)), rgb(12 16 40 / var(--back-far)));
+}
+
+/*
+ * Shadows the lifted sheet casts on the pages beneath: a soft band just past
+ * the sheet, wider and lighter the higher its edge rises, and a gutter shadow
+ * on the revealed page while the sheet stands over it; both are gone once it
+ * lands. Drawn for a right-hand page (spine on the left), mirrored for the left.
+ */
+.turn__shadow {
+  position: absolute;
+  top: calc(var(--gy) * var(--u));
+  left: calc((var(--half-w) + var(--gx)) * var(--u));
+  width: var(--swp);
+  height: calc(var(--sh) * var(--u));
+  overflow: hidden;
+}
+
+.turn[data-dir='forward'] .turn__shadow--to,
+.turn[data-dir='back'] .turn__shadow--from {
+  left: calc((var(--half-w) - var(--gx) - var(--sw)) * var(--u));
+  scale: -1 1;
+}
+
+.turn__shadow::before,
+.turn__shadow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+}
+
+.turn__shadow::before {
+  width: calc(var(--swp) * (0.06 + 0.3 * sin(var(--edge))));
+  background: linear-gradient(to right, rgb(12 16 40 / 0.6), rgb(12 16 40 / 0.2) 35%, transparent);
+}
+
+.turn__shadow--from::before {
+  translate: calc(cos(var(--lift)) * var(--swp) * 0.92) 0;
+  opacity: calc(0.7 * sin(var(--edge)) * clamp(0, cos(var(--lift)) * 20, 1));
+}
+
+.turn__shadow--to::before {
+  translate: calc(cos(var(--lift)) * var(--swp) * -1) 0;
+  opacity: calc(0.7 * sin(var(--edge)) * clamp(0, cos(var(--lift)) * -20, 1));
+}
+
+.turn__shadow--from::after {
+  width: calc(var(--swp) * 0.3);
+  background: linear-gradient(to right, rgb(12 16 40 / 0.3), transparent);
+  opacity: calc(sin(var(--lift)) * clamp(0, cos(var(--lift)) * 4 + 0.6, 1));
 }
 
 /* ─── Spiral binding (src/spiral.ts) ──────────────────────── */
@@ -383,6 +728,13 @@ button {
 
 .experience:is([data-state='open'], [data-state='turning'], [data-state='opening'], [data-state='closing-start']) .spiral__open {
   opacity: 1;
+}
+
+/* On the back cover the closed loops wrap its right-hand (spine) edge instead. */
+.experience[data-state='back'] .spiral__closed {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  scale: -1 1;
 }
 
 .spiral__holes {
@@ -435,6 +787,10 @@ button {
 
   .experience[data-state='opening'] .leaf {
     rotate: none;
+  }
+
+  .book.is-middle {
+    scale: none;
   }
 
   .book.is-fading {

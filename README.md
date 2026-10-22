@@ -40,6 +40,15 @@ canvas) has **unverified rights**. It lives only in `assets-src/` and in the Fig
 reference renders in `tests/reference/`. Both are gitignored, nothing in the build uses
 them, and they must not be committed or deployed.
 
+## Sounds
+
+`public/sounds/tap.wav`, `cover.wav` and the typewriter keys `key1–3.wav` are synthesised by
+`npm run sounds`.
+`public/sounds/page.wav`, the page-turn sound, is one flip cut from
+`public/sounds/Book Page Flip Sound Effects.mp3` — the audio of
+[“Book Page Flip Sound Effects” by Zee Effects](https://youtu.be/5pOa1-qfh8Y). The MP3 is
+kept as the source and is not deployed; `scripts/build-sounds.mjs` records how it was cut.
+
 ## Measurements
 
 All sizes in `src/styles.css` are Figma px × `--u`, where the 1440×1024 frame is scaled

@@ -1,13 +1,26 @@
-// Synthesises the three quiet interaction sounds as small mono WAVs, so the
-// site needs no third-party audio. Deterministic: same output on every run.
+// Synthesises the quiet interaction sounds other than the page turn as small
+// mono WAVs. Deterministic: same output on every run.
 //
-//   npm run sounds   # writes public/sounds/{tap,page,cover}.wav
+//   npm run sounds   # writes public/sounds/{tap,cover,key1,key2,key3}.wav
 //
 //   tap   — a soft, papery tick for the footer links (~45 ms)
-//   page  — a short paper "fwip" for turning a spread (~300 ms)
 //   cover — a slower board swoosh with a soft landing, for opening / closing (~520 ms)
+//   key1–3 — three slightly different typewriter keys for the opening question (~90 ms)
 //
-// Files peak at −6 dBFS; the site plays them quieter still (src/sound.ts).
+// Files peak at −6 dBFS (the keys at −1 dBFS: they are very short, so they need
+// the headroom to be heard); the site plays them quieter still (src/sound.ts).
+//
+// public/sounds/page.wav (turning a spread) is NOT made here: it is the first of
+// the five flips in public/sounds/Book Page Flip Sound Effects.mp3 (the audio of
+// "Book Page Flip Sound Effects" by Zee Effects, https://youtu.be/5pOa1-qfh8Y,
+// supplied by the site owner). The MP3 is kept as the untouched source and left
+// out of the build (vite.config.js). The cut skips the quiet lead-in so the flick
+// lands with the 200ms turn, and the gain is lowered in float first because the
+// MP3 decodes slightly above full scale:
+//
+//   ffmpeg -i "public/sounds/Book Page Flip Sound Effects.mp3" -af "atrim=start=0.22:end=0.70,
+//     asetpts=PTS-STARTPTS,pan=mono|c0=0.5*c0+0.5*c1,volume=0.56,
+//     afade=t=in:d=0.02,afade=t=out:st=0.42:d=0.06" -ar 44100 -c:a pcm_s16le public/sounds/page.wav
 
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -49,11 +62,11 @@ function biquad(x, type, freq, q = 0.707) {
   return x;
 }
 
-/** Normalise to −6 dBFS with 3 ms fades at both ends (no clicks). */
-function finish(x) {
+/** Normalise to `level` (default −6 dBFS) with 3 ms fades at both ends (no clicks). */
+function finish(x, level = 0.5) {
   const peak = x.reduce((m, v) => Math.max(m, Math.abs(v)), 0) || 1;
   const fade = Math.round(0.003 * RATE);
-  return x.map((v, i) => (v / peak) * 0.5 * Math.min(1, i / fade, (x.length - 1 - i) / fade));
+  return x.map((v, i) => (v / peak) * level * Math.min(1, i / fade, (x.length - 1 - i) / fade));
 }
 
 function wav(samples) {
@@ -87,19 +100,40 @@ function tap() {
   return biquad(x, 'lowpass', 5200);
 }
 
-// page: airy paper noise in a skewed hump, roughened by slow random "crinkle".
-function page() {
-  const n = len(0.3);
-  const x = biquad(biquad(noise(n, 11), 'highpass', 900), 'lowpass', 5500);
-  const crinkle = biquad(biquad(noise(n, 12), 'lowpass', 60), 'lowpass', 60);
-  const cPeak = crinkle.reduce((m, v) => Math.max(m, Math.abs(v)), 0) || 1;
+// key: a typewriter key. The key going down (a faint high tick), then the
+// typebar meeting the platen a few ms later (a short band of noise over a
+// woody body tone and a low thunk), the bar's small rebound off the platen,
+// and a trace of metallic ring. A gentle soft clip gives the strike some body
+// without an edge, and a high-pass keeps its weight in the 1–4 kHz clack that
+// small laptop and phone speakers reproduce. Each variant shifts the pitches
+// and timing a little so a run of keys doesn't repeat.
+function key({ seed, strike, body, thunk, ring, at }) {
+  const n = len(0.09);
+  const press = biquad(noise(n, seed), 'highpass', 3500);
+  const clack = biquad(noise(n, seed + 1), 'bandpass', strike, 1.4);
+  const rebound = biquad(noise(n, seed + 2), 'bandpass', strike * 1.35, 2);
+  const x = new Float64Array(n);
   for (let i = 0; i < n; i++) {
-    const p = i / n;
-    const hump = Math.pow(Math.sin(Math.PI * Math.pow(p, 0.6)), 2);
-    x[i] *= hump * (0.65 + 0.35 * (crinkle[i] / cPeak));
+    const s = t(i);
+    const hit = s - at;
+    const back = hit - 0.021;
+    x[i] = 0.25 * press[i] * Math.exp(-s / 0.0015);
+    if (hit >= 0) {
+      x[i] +=
+        clack[i] * Math.exp(-hit / 0.007) +
+        0.2 * Math.sin(2 * Math.PI * body * hit) * Math.exp(-hit / 0.009) +
+        0.12 * Math.sin(2 * Math.PI * thunk * hit) * Math.exp(-hit / 0.015) +
+        0.05 * Math.sin(2 * Math.PI * ring * hit) * Math.exp(-hit / 0.03);
+    }
+    if (back >= 0) x[i] += 0.22 * rebound[i] * Math.exp(-back / 0.004);
   }
-  return x;
+  const peak = x.reduce((m, v) => Math.max(m, Math.abs(v)), 0) || 1;
+  return biquad(biquad(x.map((v) => Math.tanh((1.8 * v) / peak)), 'highpass', 250), 'lowpass', 7000);
 }
+
+const key1 = () => key({ seed: 31, strike: 2300, body: 1050, thunk: 170, ring: 4100, at: 0.008 });
+const key2 = () => key({ seed: 37, strike: 2600, body: 1180, thunk: 185, ring: 4600, at: 0.01 });
+const key3 = () => key({ seed: 41, strike: 2050, body: 960, thunk: 160, ring: 3800, at: 0.007 });
 
 // cover: a darker, slower swoosh, then a soft low landing as the board settles.
 function cover() {
@@ -119,8 +153,9 @@ function cover() {
 }
 
 await mkdir(outDir, { recursive: true });
-for (const [name, make] of Object.entries({ tap, page, cover })) {
+const KEY_LEVEL = 0.89; // −1 dBFS
+for (const [name, make] of Object.entries({ tap, cover, key1, key2, key3 })) {
   const file = path.join(outDir, `${name}.wav`);
-  await writeFile(file, wav(finish(make())));
+  await writeFile(file, wav(finish(make(), name.startsWith('key') ? KEY_LEVEL : undefined)));
   console.log(`✓ public/sounds/${name}.wav`);
 }
