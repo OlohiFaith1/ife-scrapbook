@@ -20,8 +20,10 @@ type State =
     character, extra at a word gap or line end, how long the cursor keeps
     blinking once the sentence is typed, and the pause before the book. */
 const TYPE = { start: 600, key: 70, word: 60, line: 240, linger: 1600, pause: 600 };
-/** Typewriter keys, taken in turn so a run of characters doesn't repeat. */
+/** Typewriter keys, taken in turn so a run of characters doesn't repeat, and
+    how long one rings (public/sounds/key*.wav). */
 const KEYS = ['key1', 'key2', 'key3'] as const;
+const KEY_RING = 90;
 const BOOK_WIDTHS = [800, 1200];
 // The page slot is 475×672 Figma px; the stage scales by min(vw/1440, vh/1024).
 const BOOK_SIZES = 'min(33vw, 46.4vh)';
@@ -161,7 +163,7 @@ texture.src = `${import.meta.env.BASE_URL}texture/wall-texture.webp`;
 Promise.race([
   Promise.all([
     document.fonts.load('400 128px Caveat', 'why don’t we'),
-    document.fonts.load('500 17px Inter', 'created by Snow, for Ife'),
+    document.fonts.load('500 17px Inter', 'project by Ife website built by Snow'),
     decode(texture),
   ]),
   wait(2500),
@@ -224,8 +226,9 @@ async function typeQuestion() {
   place(keys[0], false);
   question.append(cursor);
 
-  // Taps sound from the first character where autoplay is allowed, otherwise
-  // from the visitor's first click, tap or key; a hidden tab silences them.
+  // Taps sound from the first character where the browser allows audio before
+  // any interaction, otherwise from the visitor's first click, tap or key; a
+  // hidden tab silences them.
   primeAudio();
   const silence = () => document.hidden && hush(KEYS);
   document.addEventListener('visibilitychange', silence);
@@ -248,9 +251,12 @@ async function typeQuestion() {
     await wait(Math.max(0, due - performance.now()));
   }
 
+  // Let the last key ring out, then make sure nothing is left sounding; the
+  // cursor's linger is shortened to match, so the timing is unchanged.
+  await wait(KEY_RING);
   hush(KEYS);
   document.removeEventListener('visibilitychange', silence);
-  await wait(TYPE.linger);
+  await wait(TYPE.linger - KEY_RING);
   cursor.remove();
   question.classList.remove('is-typing');
 }

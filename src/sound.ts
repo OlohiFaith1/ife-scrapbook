@@ -2,10 +2,10 @@
 // tap, cover and the typewriter keys are synthesised there, page is cut from a
 // page-flip recording).
 //
-// Web Audio is only started inside a user gesture (or where the browser reports
-// autoplay is allowed), so nothing plays before the visitor interacts. Every
-// failure — no Web Audio, a missing file, a blocked context — simply means
-// silence; callers never see an error.
+// Web Audio is started inside the visitor's first gesture, or earlier only where
+// the browser allows it (see primeAudio), so nothing plays before the browser
+// permits. Every failure — no Web Audio, a missing file, a blocked context —
+// simply means silence; callers never see an error.
 
 const VOLUME = { tap: 0.18, page: 0.28, cover: 0.32, key1: 0.18, key2: 0.18, key3: 0.18 } as const;
 export type Sound = keyof typeof VOLUME;
@@ -84,14 +84,21 @@ function stopListening() {
 for (const type of GESTURES) window.addEventListener(type, unlock, { capture: true });
 
 /**
- * Starts audio without a gesture, but only where the browser says that is
- * allowed (the Autoplay Policy Detection API); elsewhere audio waits for the
- * visitor's first click, tap or key, as browsers require.
+ * Tries to start audio without a gesture, for sounds that run before the
+ * visitor has done anything (the typewriter). Browsers that can say whether
+ * that is allowed (the Autoplay Policy Detection API) are asked first. Chrome
+ * and Safari can't say — they allow it only when the visitor's own settings or
+ * history with the site permit (Safari's "Allow All Auto-Play", for one) — so
+ * there the context is simply started: if the browser allows it, it runs; if
+ * not, it waits silently (and Chrome logs a warning) until the first click, tap
+ * or key resumes it.
+ * Either way decoding begins now, so the first sound is never late.
  */
 export function primeAudio() {
   safely(() => {
     const nav = navigator as Navigator & { getAutoplayPolicy?: (type: 'audiocontext') => string };
-    if (nav.getAutoplayPolicy?.('audiocontext') === 'allowed') unlock();
+    const policy = nav.getAutoplayPolicy?.('audiocontext');
+    if (policy === undefined || policy === 'allowed') unlock();
   });
 }
 

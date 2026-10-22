@@ -199,7 +199,8 @@ button {
   font-family: 'Inter', sans-serif;
   font-size: calc(16.739 * var(--u));
   font-weight: 500;
-  line-height: normal;
+  /* Two lines (project · website credit), set apart a little more than a wrapped paragraph. */
+  line-height: calc(28 * var(--u));
   letter-spacing: calc(-0.3348 * var(--u));
   text-align: center;
   white-space: nowrap;
