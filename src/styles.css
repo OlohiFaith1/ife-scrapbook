@@ -817,6 +817,18 @@ button {
   }
 }
 
+/*
+ * Narrow phones: Netlify adds a "Powered by Netlify" badge to the live site, a
+ * 202×64px box fixed in the bottom-right corner that takes taps across its
+ * whole area. Below ~540px wide it reaches the centred credits, so they sit
+ * just above it (70px up instead of 12px). Only the footer moves.
+ */
+@media (max-width: 540px) {
+  .credit {
+    bottom: calc(50% - 50dvh + var(--credit-bottom) + 58px);
+  }
+}
+
 /* ─── Reduced motion: no swing, just a short crossfade ────── */
 
 @media (prefers-reduced-motion: reduce) {
